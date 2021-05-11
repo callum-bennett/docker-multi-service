@@ -1,0 +1,23 @@
+sudo: required
+language: generic
+services:
+  - docker
+
+before_install:
+  - docker build -t cbennett/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true callumbennett/docker-react npm run test
+
+after_success:
+  - docker build -t callumbennett/multi-client ./client
+  - docker build -t callumbennett/multi-nginx ./nginx
+  - docker build -t callumbennett/multi-server ./server
+  - docker build -t callumbennett/multi-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images to docker hub
+  - docker push callumbennett/multi-client
+  - docker push callumbennett/multi-nginx
+  - docker push callumbennett/multi-server
+  - docker push callumbennett/multi-worker
